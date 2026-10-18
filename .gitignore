@@ -1,0 +1,8 @@
+node_modules/
+.next/
+dist/
+.env
+artifacts/*
+!artifacts/.gitkeep
+npm-debug.log*
+*.tsbuildinfo

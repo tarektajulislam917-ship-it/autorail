@@ -1,0 +1,52 @@
+services:
+  browser:
+    build:
+      context: .
+      dockerfile: services/browser-service/Dockerfile
+    environment:
+      CONTROL_TOKEN: ${CONTROL_TOKEN:-local-development-control-token}
+      DISPLAY: :99
+      SCREEN_WIDTH: 1440
+      SCREEN_HEIGHT: 900
+      SCREEN_DEPTH: 24
+      ARTIFACTS_DIR: /artifacts
+      PROFILE_DIR: /browser-profile
+    expose:
+      - "3001"
+      - "6080"
+    group_add:
+      - "${HOST_GID:-1000}"
+    volumes:
+      - ./artifacts:/artifacts
+      - browser-profile:/browser-profile
+    shm_size: 2gb
+    init: true
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:3001/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 20s
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      APP_HOST: 0.0.0.0
+      BROWSER_SERVICE_URL: http://browser:3001
+      NOVNC_SERVICE_URL: http://browser:6080
+      CONTROL_TOKEN: ${CONTROL_TOKEN:-local-development-control-token}
+    ports:
+      - "${APP_PORT:-3000}:3000"
+    depends_on:
+      browser:
+        condition: service_healthy
+    init: true
+    restart: unless-stopped
+
+volumes:
+  browser-profile:

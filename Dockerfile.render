@@ -1,0 +1,45 @@
+FROM mcr.microsoft.com/playwright:v1.64.1-noble
+
+RUN apt-get update \
+  && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+    curl \
+    fluxbox \
+    novnc \
+    websockify \
+    x11vnc \
+    xvfb \
+  && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+COPY package.json package-lock.json ./
+COPY apps/web/package.json apps/web/package.json
+COPY services/browser-service/package.json services/browser-service/package.json
+RUN npm ci
+
+COPY apps/web apps/web
+COPY services/browser-service services/browser-service
+COPY render-entrypoint.sh ./render-entrypoint.sh
+
+RUN STATIC_EXPORT=true npm run build \
+  && npm prune --omit=dev \
+  && chmod +x /app/render-entrypoint.sh \
+  && mkdir -p /tmp/live-browser-artifacts /tmp/live-browser-profile \
+  && chown -R pwuser:pwuser /app /tmp/live-browser-artifacts /tmp/live-browser-profile
+
+USER pwuser
+
+ENV NODE_ENV=production \
+    APP_HOST=0.0.0.0 \
+    DISPLAY=:99 \
+    SINGLE_SERVICE=true \
+    ARTIFACTS_DIR=/tmp/live-browser-artifacts \
+    PROFILE_DIR=/tmp/live-browser-profile \
+    SCREEN_WIDTH=960 \
+    SCREEN_HEIGHT=600 \
+    SCREEN_DEPTH=24 \
+    MALLOC_ARENA_MAX=2 \
+    NODE_OPTIONS=--max-old-space-size=96
+
+EXPOSE 10000
+CMD ["/app/render-entrypoint.sh"]

@@ -1,0 +1,17 @@
+{
+  "name": "live-server-browser",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "services/*"
+  ],
+  "scripts": {
+    "build": "npm run build --workspace @live-browser/browser-service && npm run build --workspace @live-browser/web",
+    "test": "npm run test --workspace @live-browser/browser-service",
+    "typecheck": "npm run typecheck --workspace @live-browser/browser-service && npm run typecheck --workspace @live-browser/web",
+    "verify:live": "node scripts/verify-live.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

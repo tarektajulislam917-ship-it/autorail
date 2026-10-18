@@ -1,0 +1,31 @@
+services:
+  - type: web
+    name: live-server-browser
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile.render
+    dockerContext: .
+    healthCheckPath: /browser-api/health
+    envVars:
+      - key: CONTROL_TOKEN
+        generateValue: true
+      - key: NODE_ENV
+        value: production
+      - key: APP_HOST
+        value: 0.0.0.0
+      - key: SINGLE_SERVICE
+        value: "true"
+      - key: SCREEN_WIDTH
+        value: "960"
+      - key: SCREEN_HEIGHT
+        value: "600"
+      - key: SCREEN_DEPTH
+        value: "24"
+      - key: ARTIFACTS_DIR
+        value: /tmp/live-browser-artifacts
+      - key: PROFILE_DIR
+        value: /tmp/live-browser-profile
+      - key: MALLOC_ARENA_MAX
+        value: "2"
+      - key: NODE_OPTIONS
+        value: --max-old-space-size=96
